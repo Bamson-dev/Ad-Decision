@@ -3,7 +3,7 @@
   "hooks": {
     "stop": [
       {
-        "command": ".cursor/hooks/agent-git-push.sh",
+        "command": ".Bamidele/hooks/git-sync-after-agent.sh",
         "timeout": 120
       }
     ]

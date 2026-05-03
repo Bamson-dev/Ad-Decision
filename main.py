@@ -1,3 +1,9 @@
+"""
+Ad Decision — Telegram bot for Meta ad report analysis.
+
+Author: Bamidele Matthew
+"""
+
 import asyncio
 import io
 import logging

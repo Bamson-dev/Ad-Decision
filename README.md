@@ -1,5 +1,7 @@
 # Ad Decision Bot
 
+**Author:** Bamidele Matthew
+
 A Telegram bot that reads Meta ad report files (`.csv` or `.xlsx`) and returns clear optimization decisions using DeepSeek.
 
 ## What it does
