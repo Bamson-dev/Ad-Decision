@@ -62,11 +62,32 @@ CURRENCY_DEFAULT_USD_NOTICE = (
     "Currency could not be auto-detected. Defaulting to USD."
 )
 
-RESET_CONFIRM_TEXT = (
-    "Conversation reset. I still remember your last report. Ask me anything."
-)
+RESET_CONFIRM_TEXT = "Conversation reset. I still remember your last report."
 
-ANALYSIS_FOOTER_PLAIN = "\n\nAsk me anything about this report, or send another. I'm here to help."
+ANALYSIS_FOOTER_PLAIN = "\n\nAsk if you want to drill into any line, or send another report."
+
+# /start body (MarkdownV2: single-asterisk bold). /help escaped before send.
+START_WELCOME_RAW = """*Hey, I'm Adley*
+
+I help you make sharper decisions on your Meta ads.
+
+*What I do*
+
+- I read your Facebook or Instagram ad reports and tell you what to pause, scale, and fix. Just decisions, no charts.
+- I answer any question about your ads. Hooks, audiences, creatives, scaling, attribution, weird CPM spikes, whatever is stuck.
+- I help you turn cold spend into actual sales.
+
+*Most ads fail for one of three reasons*
+
+- The hook is weak and people scroll past.
+- The audience is wrong or burnt out.
+- The offer is unclear.
+
+If your ad is not converting, it is almost always one of those three. I help you figure out which.
+
+*Ready?*
+
+Send me your ad report (CSV or Excel), or just type what is stuck. Tap /help if you need export instructions."""
 
 HELP_TEXT = (
     "How to export your Meta ad report:\n\n"
@@ -119,46 +140,25 @@ CURRENCY_THRESHOLDS: Dict[str, float] = {
 }
 
 ADLEY_SYSTEM_PROMPT = """
-You are Adley, a senior global media buyer with 15+ years of experience running Meta ads (Facebook and Instagram). You have managed over $50 million in ad spend across e-commerce, info products, lead generation, and local services. You have run ads across Africa, the US, UK, Europe, and Asia. You understand the Meta auction, creative strategy, audience targeting, bidding, attribution, scaling, and the difference between a winning ad set and a leaking one.
-You speak like a senior buyer talking to a peer. Direct, confident, plain English, no fluff, no AI disclaimers, no "as an AI language model" or "I cannot" hedging. You answer like a real human consultant. You give clear, specific, actionable advice based on data and experience.
-Your knowledge includes:
-
-Akin Alabi's "How to Sell to Nigerians" framework: giant promise, free bonus, guarantee, proof, fear-based selling, awoof
-Alex Hormozi's $100M Offers: value equation, offer stacking, risk reversal, scarcity, urgency
-CPM reduction tactics: no ad-y language in first 3 lines, story-first hooks, pattern-break openings, delay the pitch
-Nigerian market context: Naira pricing, Lagos and Abuja CPM benchmarks, OPay and Paystack pixel quirks, Pidgin copy when relevant
-Global market context: USD, EUR, GBP benchmarks, e-commerce vs lead gen vs info product strategies
-
-You are not a generic AI. You are Adley.
-When analyzing reports:
-
-Identify the campaign objective from the data and tailor advice
-Reference real numbers and real ad set names from the report
-Never invent data
-Use benchmarks where useful: CTR above 1% is healthy for cold traffic, ROAS above 2x is generally profitable for e-commerce, frequency above 3 signals fatigue, climbing CPM signals declining relevance, rising CPL means audience saturation
-
-When chatting:
-
-Answer ad-related questions with specific advice and frameworks
-If the user references their previous report, pull from the saved analysis
-If the user asks something not related to ads, marketing, copywriting, funnels, audiences, creatives, or business growth, politely redirect: "I'm here for ad decisions, not general chat. Ask me anything about your ads, send a report, or tell me what's stuck and I'll help."
-Use the user's preferred language. If they write in Pidgin, respond in Pidgin. Default to standard English.
-Use the user's currency context if known.
-
-Output formatting rules:
-
-Use plain numbered lists with regular periods (1., 2., 3.). Do NOT use backslash escapes like 1. The bot's code will handle escaping for Telegram MarkdownV2.
-Use single asterisks for section titles like SECTION NAME.
-Use blank lines between sections and between numbered items for readability.
-Use ISO currency codes (NGN, USD, GBP) instead of currency symbols.
-Do not use markdown features other than single-asterisk bold.
-Never invent numbers, prices, or facts. If you don't know, say so.
-
-Speak like a real operator who's lived this. Confident, direct, useful.
+You are Adley. You help people make sharper decisions on Meta ads (Facebook and Instagram). You know the auction, creative, audiences, bidding, attribution, scaling, and how to spot a leaking ad set versus one worth scaling.
+You speak like a real operator talking to a peer: direct, plain English, no fluff, no AI disclaimers, no "as an AI language model" or stiff hedging. Never name-drop authors, books, or frameworks. Never recite a resume (no years-of-experience brags, no spend totals, no credential flex). Apply strong-offer thinking, Nigerian-market nuance when relevant (Naira, Lagos/Abuja dynamics, OPay/Paystack quirks, Pidgin when the user uses it), and CPM discipline (no ad-y openers, story-first hooks, pattern breaks, delay the pitch) without naming those frameworks.
+Tone — sound human, not clinical: you have felt the pain of bad spend. If someone says their ad is not converting, do not answer with a tagline or motivational one-liner. Acknowledge the frustration briefly, then ask for the specifics you need. Warm, direct, no performative confidence.
+Closings: do not end with filler sign-offs. Never use phrases like: "No guesswork." "Let's get to work." "I've got you." "I'm here to help." "Hope this helps." "Let me know if you have questions." or similar customer-service wrap-ups. End naturally: sometimes a single observation, sometimes a question, sometimes just the answer with no closer.
+When analyzing reports: identify objective from the data, reference real ad set names and numbers only, never invent data. Benchmarks when useful: CTR above ~1% often fine for cold traffic, ROAS above ~2x often workable for e-commerce, frequency above ~3 can mean fatigue, rising CPM can mean relevance loss, rising CPL can mean saturation.
+When chatting: give specific, actionable advice. If the user references their prior report, use the saved analysis. Off-topic (not ads, marketing, copy, funnels, audiences, creatives, business growth): redirect with exactly: "I'm here for ad decisions, not general chat. Ask me about your ads, send a report, or say what is stuck."
+Use the user's language (Pidgin if they write Pidgin; default standard English). Use known currency context when you have it.
+Markdown for Telegram MarkdownV2 (the app escapes for you): use ONLY single-asterisk bold like *this*. Never double asterisks. Never underscores or backticks. No # headers — use bold caps lines for headlines instead.
+Formatting for every reply:
+- Open with a bold caps headline line: *HEADLINE HERE*
+- Use bold subheads for sections: *Section title*
+- Unordered lists: lines starting with "- " (plain dashes; Telegram will not render styled bullets, that is fine).
+- Ordered steps: 1. 2. 3. with a normal period after the number (never backslash before the period).
+- Short sentences, no filler, blank lines between sections and between list items.
+Never invent numbers or facts. If you do not know, say so.
 """.strip()
 
 ADLEY_ANALYSIS_FORMAT_PROMPT = """
-When you analyze a Meta ad report, output plain text only (the app will escape for Telegram MarkdownV2). Follow this layout exactly (substitute real ad set names and numbers from the report only).
+When you analyze a Meta ad report, output for Telegram MarkdownV2 (single *bold* only; no **, no underscores, no backticks, no #). Follow this layout (real ad set names and numbers from the report only).
 
 *QUICK TAKE*
 
@@ -182,7 +182,7 @@ Biggest waste: [ad set name] ([brief reason])
 
 2. [Specific actionable change]
 
-Rules: plain numbered lists with regular periods (1., 2., 3.) — never backslash escapes before the period. One blank line between sections and between numbered items. ISO currency codes only, no symbols. Under 4000 characters when possible. End with: Ask me anything about this report, or send another. I'm here to help.
+Rules: plain 1. 2. lists with normal periods; blank lines between sections and items; ISO codes not symbols; under 4000 characters when possible. End with a neutral one-liner such as: Ask if you want to drill into any line, or send another report. Do not use banned closers ("I'm here to help", "Hope this helps", etc.).
 """.strip()
 
 logging.basicConfig(
@@ -329,14 +329,23 @@ def escape_markdown_v2_plain(text: str) -> str:
 
 
 def escape_markdown_v2(text: str) -> str:
+    """
+    Normalize model output, then escape MarkdownV2 outside single-asterisk *bold* spans.
+    Inner bold content is escaped (Telegram requires specials inside bold to be escaped too).
+    """
     text = text.replace("**", "*")
+    text = re.sub(r"\*\s*\*", "", text)
     text = re.sub(r"(?<=\d)\\(?=\.)", "", text)
     parts: List[str] = []
     last = 0
-    for m in re.finditer(r"\*([^*]+)\*", text):
+    for m in re.finditer(r"\*([^*]*)\*", text):
         parts.append(escape_markdown_v2_plain(text[last : m.start()]))
-        inner = m.group(1)
-        parts.append("*" + escape_markdown_v2_plain(inner) + "*")
+        inner_raw = m.group(1)
+        inner = inner_raw.strip()
+        if not inner:
+            last = m.end()
+            continue
+        parts.append("*" + escape_markdown_v2_plain(inner_raw) + "*")
         last = m.end()
     parts.append(escape_markdown_v2_plain(text[last:]))
     return "".join(parts)
@@ -625,6 +634,35 @@ async def delete_message_safe(msg) -> None:
         pass
 
 
+async def progressive_report_placeholder(bot, chat_id: int, message_id: int, done: asyncio.Event) -> None:
+    """Edit one status message at 12s and 27s while waiting for report analysis. Cancel via done.set()."""
+    try:
+        try:
+            await asyncio.wait_for(done.wait(), timeout=12.0)
+            return
+        except asyncio.TimeoutError:
+            pass
+        if done.is_set():
+            return
+        try:
+            await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="Crunching the numbers...")
+        except Exception as exc:
+            logger.warning("placeholder edit (crunching): %s", exc)
+        try:
+            await asyncio.wait_for(done.wait(), timeout=15.0)
+            return
+        except asyncio.TimeoutError:
+            pass
+        if done.is_set():
+            return
+        try:
+            await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="Almost done...")
+        except Exception as exc:
+            logger.warning("placeholder edit (almost done): %s", exc)
+    except asyncio.CancelledError:
+        return
+
+
 def read_report_dataframe(file_name: str, file_bytes: bytes) -> pd.DataFrame:
     lower_name = file_name.lower()
     buffer = io.BytesIO(file_bytes)
@@ -642,22 +680,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if update.message is None or update.effective_user is None:
         return
     uid = update.effective_user.id
-    welcome = (
-        "Hey, I'm Adley\n\n"
-        "Your AI media buyer. I help you make sharper ad decisions.\n\n"
-        "What I do\n\n"
-        "• Read your Meta ad reports and tell you what to pause, scale, and fix\n"
-        "• Answer any question about ads, copy, audiences, creatives, or scaling\n"
-        "• Walk you through what's stuck and how to fix it\n\n"
-        "How to use me\n\n"
-        "Send your CSV or Excel report, or just type a question. Tap /help for export instructions.\n\n"
-        "Ready when you are."
-    )
-    raw = welcome.replace("/help", "\\/help")
-    await reply_plain_markdown_v2(update.message, raw)
+    welcome = START_WELCOME_RAW.strip().replace("/help", "\\/help")
+    await reply_markdown_v2(update.message, escape_markdown_v2(welcome))
     rec = await load_user(uid)
     append_message(rec, "user", "/start")
-    append_message(rec, "assistant", welcome)
+    append_message(rec, "assistant", START_WELCOME_RAW.strip())
     await save_user(uid, rec)
 
 
@@ -732,38 +759,42 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
 
     rec = await load_user(uid)
-    thinking_msg = await message.reply_text("Thinking...")
+    currency_code, spend_col, currency_notice = detect_currency_and_spend_column(df)
+    if spend_col is None:
+        spend_col = find_fallback_spend_column(df)
+    if spend_col is None:
+        await reply_plain_markdown_v2(
+            message,
+            "I could not find a spend column in this report. Please export using Meta 'Performance and Clicks' columns and resend.",
+        )
+        return
+
+    total_spend = sum_spend_column(df, spend_col)
+    day_span = compute_report_date_span_days(df)
+    threshold = get_spend_threshold(currency_code)
+
+    if currency_notice:
+        await reply_plain_markdown_v2(message, currency_notice)
+
+    below_spend = total_spend < threshold
+    below_days = day_span is not None and day_span < 3
+    if below_spend or below_days:
+        await reply_plain_markdown_v2(message, NOT_ENOUGH_DATA_TEXT)
+        return
+
+    report_text = dataframe_to_text(df)
+    if not report_text.strip():
+        await reply_plain_markdown_v2(message, "The file content looks empty after parsing. Please export and resend.")
+        return
+
+    status_msg = await message.reply_text("Reading your report...")
     stop_typing = asyncio.Event()
     typing_task = asyncio.create_task(typing_keepalive(context.bot, message.chat_id, stop_typing))
+    done_prog = asyncio.Event()
+    prog_task = asyncio.create_task(
+        progressive_report_placeholder(context.bot, message.chat_id, status_msg.message_id, done_prog)
+    )
     try:
-        currency_code, spend_col, currency_notice = detect_currency_and_spend_column(df)
-        if spend_col is None:
-            spend_col = find_fallback_spend_column(df)
-        if spend_col is None:
-            await reply_plain_markdown_v2(
-                message,
-                "I could not find a spend column in this report. Please export using Meta 'Performance and Clicks' columns and resend.",
-            )
-            return
-
-        total_spend = sum_spend_column(df, spend_col)
-        day_span = compute_report_date_span_days(df)
-        threshold = get_spend_threshold(currency_code)
-
-        if currency_notice:
-            await reply_plain_markdown_v2(message, currency_notice)
-
-        below_spend = total_spend < threshold
-        below_days = day_span is not None and day_span < 3
-        if below_spend or below_days:
-            await reply_plain_markdown_v2(message, NOT_ENOUGH_DATA_TEXT)
-            return
-
-        report_text = dataframe_to_text(df)
-        if not report_text.strip():
-            await reply_plain_markdown_v2(message, "The file content looks empty after parsing. Please export and resend.")
-            return
-
         try:
             recommendation = await asyncio.to_thread(call_deepseek_report_analysis, report_text, currency_code)
         except TimeoutError:
@@ -784,7 +815,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         append_message(rec, "user", "User uploaded a report. Adley analyzed it.")
         await save_user(uid, rec)
 
-        if "Ask me anything about this report" in recommendation:
+        if "drill into any line" in recommendation.lower():
             out_plain = recommendation
         else:
             out_plain = recommendation + ANALYSIS_FOOTER_PLAIN
@@ -792,13 +823,19 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         for chunk in split_for_telegram(escaped):
             await reply_markdown_v2(message, chunk)
     finally:
+        done_prog.set()
+        prog_task.cancel()
+        try:
+            await prog_task
+        except asyncio.CancelledError:
+            pass
         stop_typing.set()
         typing_task.cancel()
         try:
             await typing_task
         except asyncio.CancelledError:
             pass
-        await delete_message_safe(thinking_msg)
+        await delete_message_safe(status_msg)
 
 
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -810,7 +847,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     rec = await load_user(uid)
     messages = build_chat_messages(rec, user_text)
 
-    thinking_msg = await message.reply_text("Thinking...")
+    thinking_msg = await message.reply_text("One sec...")
     stop_typing = asyncio.Event()
     typing_task = asyncio.create_task(typing_keepalive(context.bot, message.chat_id, stop_typing))
     try:
