@@ -1,5 +1,13 @@
 python-telegram-bot==21.6
+<<<<<<< HEAD
 pandas==2.2.2
 openpyxl==3.1.5
 requests==2.32.3
 python-dotenv==1.0.1
+=======
+pandas==2.2.3
+openpyxl==3.1.5
+requests==2.32.3
+python-dotenv==1.0.1
+aiofiles==24.1.0
+>>>>>>> b59707a957a3e8186dce3440d4af2cbb319ebc31
