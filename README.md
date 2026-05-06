@@ -35,7 +35,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-3. Set required variables in `.env`:
+3. Set required variables in `.env` (local development only):
 
 - `TELEGRAM_BOT_TOKEN`
 - `DEEPSEEK_API_KEY`
@@ -45,6 +45,13 @@ cp .env.example .env
 ```bash
 python main.py
 ```
+
+## Production Setup (Railway)
+
+Set these as service variables in Railway (instead of using a local `.env` file):
+
+- `TELEGRAM_BOT_TOKEN`
+- `DEEPSEEK_API_KEY`
 
 ## Commands
 
