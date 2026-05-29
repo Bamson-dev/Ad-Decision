@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import aiofiles
 import pandas as pd
 import requests
-from dotenv import load_dotenv
+from config import settings, setup_logging
 from telegram import BotCommand, Update
 from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest, Conflict
@@ -32,15 +32,15 @@ from telegram.ext import (
     filters,
 )
 
-load_dotenv()
+setup_logging()
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "").strip()
+TELEGRAM_BOT_TOKEN = settings.telegram_bot_token
+DEEPSEEK_API_KEY = settings.deepseek_api_key
 
 MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
 MAX_TELEGRAM_MESSAGE_LEN = 3500
-DEEPSEEK_TIMEOUT_SECONDS = 90
-MAX_HISTORY_MESSAGES = 20
+DEEPSEEK_TIMEOUT_SECONDS = settings.deepseek_timeout_seconds
+MAX_HISTORY_MESSAGES = settings.max_history_messages
 
 NOT_ENOUGH_DATA_TEXT = (
     "Not enough data yet. Wait until you have at least 3 days of data and meaningful spend before analyzing."
@@ -261,10 +261,6 @@ End with this one line only (exact wording, no extra sentences):
 Want me to break down a specific ad set or talk strategy on any of these?
 """.strip()
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
-)
 logger = logging.getLogger(__name__)
 
 _MDV2_SPECIAL = frozenset(r"_*[]()~`>#+-=|{}.!")
@@ -281,20 +277,11 @@ def _get_lock() -> asyncio.Lock:
 
 
 def _get_data_dir() -> Path:
-    env = os.getenv("ADLEY_DATA_DIR", "").strip()
-    if env:
-        return Path(env)
-    app_default = Path("/app/data")
-    if app_default.parent.is_dir():
-        return app_default
-    render_default = Path("/opt/render/project/src/data")
-    if Path("/opt/render/project/src").is_dir():
-        return render_default
-    return Path(__file__).resolve().parent / "data"
+    return settings.adley_data_dir.resolve()
 
 
 def _users_json_path() -> Path:
-    return _get_data_dir() / "users.json"
+    return settings.users_json_path
 
 
 def _utc_now_iso() -> str:
@@ -975,18 +962,33 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     if isinstance(context.error, Conflict):
         logger.warning(
             "Another instance is polling this bot token. "
-            "Stop Railway, local dev, or duplicate Render services."
+            "Run only one container replica per TELEGRAM_BOT_TOKEN."
         )
         return
     logger.exception("Unhandled error while processing update: %s", context.error)
 
 
-def main() -> None:
-    if not TELEGRAM_BOT_TOKEN:
-        raise RuntimeError("TELEGRAM_BOT_TOKEN is missing in environment.")
-    ensure_data_dir_and_file_sync()
+async def post_shutdown(application: Application) -> None:
+    logger.info("Shutdown complete.")
 
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).post_init(post_init).build()
+
+def main() -> None:
+    settings.validate_required()
+    ensure_data_dir_and_file_sync()
+    logger.info(
+        "Adley starting (data_dir=%s, storage=%s, log_level=%s)",
+        _get_data_dir(),
+        settings.storage_backend,
+        settings.log_level,
+    )
+
+    app = (
+        Application.builder()
+        .token(TELEGRAM_BOT_TOKEN)
+        .post_init(post_init)
+        .post_shutdown(post_shutdown)
+        .build()
+    )
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("reset", reset_command))
@@ -994,12 +996,17 @@ def main() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
     app.add_error_handler(error_handler)
 
-    logger.info("Adley is running...")
     try:
-        asyncio.get_event_loop()
+        asyncio.get_running_loop()
     except RuntimeError:
         asyncio.set_event_loop(asyncio.new_event_loop())
-    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+
+    logger.info("Polling Telegram (container SIGTERM triggers graceful shutdown)...")
+    app.run_polling(
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True,
+        close_loop=False,
+    )
 
 
 if __name__ == "__main__":

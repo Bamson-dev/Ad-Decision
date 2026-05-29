@@ -2,143 +2,63 @@
 
 Built by **Bamidele Matthew**.
 
-Adley is a Telegram bot for Meta ads support. It handles free-form ad strategy conversations and analyzes uploaded report files (`.csv` or `.xlsx`) to return clear optimization guidance.
-
-## Try Adley on Telegram
+Telegram bot for Meta ads: conversational guidance and CSV/XLSX report analysis (pause / scale / fix).
 
 [Launch @Addecisionbot](https://t.me/Addecisionbot)
 
 ## Features
 
-- Conversational support for ads, copy, audiences, creatives, and scaling
-- CSV/XLSX report upload and analysis
-- Currency detection and minimum-spend checks before analysis
-- Date-range validation when date columns are available
-- Structured, decision-oriented responses (what to pause, scale, or fix)
-- Follow-up interactions for report-based guidance
-- Persistent user memory (last 20 messages + last report analysis)
+- Meta ads chat (strategy, copy, audiences, scaling)
+- CSV/XLSX report upload and DeepSeek-powered analysis
+- Currency detection and spend/date thresholds
+- Persistent per-user memory (last 20 messages + last report)
+- **Docker / Coolify / VPS** deployment (no PaaS lock-in)
 
-## Requirements
-
-- Python 3.9+ (3.12 recommended for production)
-
-## Local Setup
-
-1. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-2. Create your environment file:
+## Quick start (local)
 
 ```bash
 cp .env.example .env
-```
+# Edit .env with TELEGRAM_BOT_TOKEN and DEEPSEEK_API_KEY
 
-3. Set required variables in `.env` (local development only):
-
-- `TELEGRAM_BOT_TOKEN`
-- `DEEPSEEK_API_KEY`
-
-4. Run the bot:
-
-```bash
+pip install -r requirements.txt
 python main.py
 ```
 
-User data is stored in `./data/users.json` locally.
+Data is stored in `./data/users.json` by default.
 
-## Production Setup (Render)
+## Quick start (Docker)
 
-Adley runs as a **background worker** on Render (not a web service — it uses Telegram long polling, not HTTP).
+```bash
+cp .env.example .env
+docker compose up --build
+```
 
-The repo includes a [`render.yaml`](render.yaml) Blueprint that configures everything automatically.
+Persistent data is stored in the `adley-data` volume at `/data` inside the container.
 
-### Deploy with Blueprint
+## Production deployment
 
-1. **Stop the Railway service first** — only one instance should poll the same bot token at a time.
-2. Go to [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**.
-3. Connect the GitHub repo: `Bamson-dev/Ad-Decision`.
-4. Render will detect `render.yaml` and create the `ad-decision` worker.
-5. When prompted, set these secret environment variables:
-   - `TELEGRAM_BOT_TOKEN`
-   - `DEEPSEEK_API_KEY`
-6. Click **Apply** and wait for the first deploy to finish.
-7. Check logs for `Adley is running...` and test the bot on Telegram.
+**Target:** Contabo VPS + [Coolify](https://coolify.io) + Docker + persistent volumes.
 
-### What the Blueprint configures
-
-| Setting | Value |
-|---------|-------|
-| Service type | Background worker |
-| Start command | `python main.py` |
-| Build command | `pip install -r requirements.txt` |
-| Python version | 3.12.8 (via `.python-version`) |
-| Persistent disk | 1 GB at `/opt/render/project/src/data` |
-| Data path | `ADLEY_DATA_DIR=/opt/render/project/src/data` |
-
-The persistent disk keeps `users.json` (conversation memory) across redeploys.
-
-### Manual Render setup (without Blueprint)
-
-If you prefer the dashboard:
-
-1. **New** → **Background Worker** → connect the repo.
-2. **Build command:** `pip install -r requirements.txt`
-3. **Start command:** `python main.py`
-4. **Environment variables:**
-   - `TELEGRAM_BOT_TOKEN` (secret)
-   - `DEEPSEEK_API_KEY` (secret)
-   - `ADLEY_DATA_DIR` = `/opt/render/project/src/data`
-   - `PYTHON_VERSION` = `3.12.8`
-5. **Disks** → Add disk → mount path `/opt/render/project/src/data`, size 1 GB.
-6. Deploy.
-
-### Migrating user data from Railway
-
-If you had a persistent volume on Railway at `/app/data`:
-
-1. Download `users.json` from the Railway volume before shutting down.
-2. After Render deploys, open a **Shell** on the worker (Render Dashboard → your service → Shell).
-3. Copy the file into the mounted disk:
-   ```bash
-   # paste or upload users.json, then:
-   cp /tmp/users.json /opt/render/project/src/data/users.json
-   ```
-4. Restart the worker.
-
-### After migration
-
-Once Render is confirmed working:
-
-1. Delete or pause the Railway service to avoid duplicate billing.
-2. Remove Railway environment variables if no longer needed.
-
-### Troubleshooting
-
-**`Conflict: terminated by other getUpdates request`**
-
-Telegram allows only **one** polling instance per bot token. Stop every other copy:
-
-- Railway service (delete or pause — do not leave it running)
-- Local `python main.py` on your machine
-- A second Render service using the same token
-
-Then redeploy the Render worker. During a deploy handoff you may see one or two conflict warnings; they should stop once the old instance is gone.
-
-**Deploy `Timed Out` on Render**
-
-Confirm the service type is **Background Worker**, not **Web Service**. A web service expects HTTP on `$PORT`; this bot does not listen on a port, so deploy health checks will time out.
-
-In the Render dashboard, the service page header should say **Background Worker**. If it says **Web Service**, create a new worker from the Blueprint (`render.yaml`) and delete the web service.
-
-**Bot token exposed in logs**
-
-If your token appears in deploy logs, revoke it in [@BotFather](https://t.me/BotFather) (`/revoke`), update `TELEGRAM_BOT_TOKEN` on Render, and redeploy.
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for full Coolify setup, volumes, health checks, scaling rules, and future PostgreSQL/Redis wiring.
 
 ## Commands
 
-- `/start` - Intro and quick usage
-- `/help` - Export steps for Meta Ads Manager reports
-- `/reset` - Resets conversation history (keeps last report analysis)
+- `/start` — Intro
+- `/help` — Meta export steps
+- `/reset` — Clear chat history (keeps last report context)
+
+## Environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `TELEGRAM_BOT_TOKEN` | Yes | — | Bot token from [@BotFather](https://t.me/BotFather) |
+| `DEEPSEEK_API_KEY` | Yes | — | DeepSeek API key |
+| `ADLEY_DATA_DIR` | No | `./data` (local), `/data` (Docker) | Directory for `users.json` |
+| `LOG_LEVEL` | No | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `STORAGE_BACKEND` | No | `json` | Storage driver (`json` only today) |
+| `DATABASE_URL` | No | — | Reserved for future Postgres |
+| `REDIS_URL` | No | — | Reserved for future Redis |
+
+## Requirements
+
+- Python 3.12+ (local) or Docker image `python:3.12-slim`

@@ -1,0 +1,44 @@
+# Local development and reference stack for Coolify.
+# In Coolify: create the app from the Dockerfile, mount a volume at /data, set env vars in the UI.
+
+services:
+  adley:
+    build: .
+    container_name: adley-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ADLEY_DATA_DIR: /data
+      LOG_LEVEL: INFO
+      STORAGE_BACKEND: json
+      # When Postgres/Redis run on the same Coolify server, use internal hostnames, e.g.:
+      # DATABASE_URL: postgresql://adley:secret@postgres:5432/adley
+      # REDIS_URL: redis://redis:6379/0
+    volumes:
+      - adley-data:/data
+    # Long-polling: run exactly ONE replica per bot token.
+    deploy:
+      replicas: 1
+
+volumes:
+  adley-data:
+    driver: local
+
+  # --- Future (uncomment when services exist in Coolify) ---
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: adley
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: adley
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #
+  # redis:
+  #   image: redis:7-alpine
+  #   command: redis-server --appendonly yes
+  #   volumes:
+  #     - redis-data:/data
+  #   restart: unless-stopped

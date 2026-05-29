@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .cursor/
 .Bamidele/
+data/users.json
+data/*.tmp
