@@ -23,7 +23,7 @@ import requests
 from dotenv import load_dotenv
 from telegram import BotCommand, Update
 from telegram.constants import ChatAction, ParseMode
-from telegram.error import BadRequest
+from telegram.error import BadRequest, Conflict
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -961,6 +961,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def post_init(application: Application) -> None:
+    await application.bot.delete_webhook(drop_pending_updates=True)
     await application.bot.set_my_commands(
         [
             BotCommand("start", "Welcome from Adley"),
@@ -968,6 +969,16 @@ async def post_init(application: Application) -> None:
             BotCommand("reset", "Clear conversation, keep last report"),
         ]
     )
+
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if isinstance(context.error, Conflict):
+        logger.warning(
+            "Another instance is polling this bot token. "
+            "Stop Railway, local dev, or duplicate Render services."
+        )
+        return
+    logger.exception("Unhandled error while processing update: %s", context.error)
 
 
 def main() -> None:
@@ -981,13 +992,14 @@ def main() -> None:
     app.add_handler(CommandHandler("reset", reset_command))
     app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+    app.add_error_handler(error_handler)
 
     logger.info("Adley is running...")
     try:
         asyncio.get_event_loop()
     except RuntimeError:
         asyncio.set_event_loop(asyncio.new_event_loop())
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 
 if __name__ == "__main__":

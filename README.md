@@ -115,6 +115,28 @@ Once Render is confirmed working:
 1. Delete or pause the Railway service to avoid duplicate billing.
 2. Remove Railway environment variables if no longer needed.
 
+### Troubleshooting
+
+**`Conflict: terminated by other getUpdates request`**
+
+Telegram allows only **one** polling instance per bot token. Stop every other copy:
+
+- Railway service (delete or pause — do not leave it running)
+- Local `python main.py` on your machine
+- A second Render service using the same token
+
+Then redeploy the Render worker. During a deploy handoff you may see one or two conflict warnings; they should stop once the old instance is gone.
+
+**Deploy `Timed Out` on Render**
+
+Confirm the service type is **Background Worker**, not **Web Service**. A web service expects HTTP on `$PORT`; this bot does not listen on a port, so deploy health checks will time out.
+
+In the Render dashboard, the service page header should say **Background Worker**. If it says **Web Service**, create a new worker from the Blueprint (`render.yaml`) and delete the web service.
+
+**Bot token exposed in logs**
+
+If your token appears in deploy logs, revoke it in [@BotFather](https://t.me/BotFather) (`/revoke`), update `TELEGRAM_BOT_TOKEN` on Render, and redeploy.
+
 ## Commands
 
 - `/start` - Intro and quick usage
