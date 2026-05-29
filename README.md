@@ -74,7 +74,7 @@ The repo includes a [`render.yaml`](render.yaml) Blueprint that configures every
 | Service type | Background worker |
 | Start command | `python main.py` |
 | Build command | `pip install -r requirements.txt` |
-| Python version | 3.12.8 |
+| Python version | 3.12.8 (via `.python-version`) |
 | Persistent disk | 1 GB at `/opt/render/project/src/data` |
 | Data path | `ADLEY_DATA_DIR=/opt/render/project/src/data` |
 
